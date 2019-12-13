@@ -7,7 +7,7 @@ __author__ = "Tobias, 7232927, Schott, 7040759"
 __credits__ = ""
 __email__ = "s0798915@rz.uni-frankfurt.de, s7296105@stud.uni-frankfurt.de"
 
-# TODO god mode
+# TODO god mode beim punktabzug beachten
 # TODO Table at gameend
 
 standart_values = [(2, 1), (3, 1), (3, 2), (4, 1), (4, 2), (4, 3), (5, 1),
@@ -33,6 +33,7 @@ class Options:
     points_s = 1
     points_m = 2
     points_h = 3
+    god_mode = {}
 
     def reset(self):
         self.value_m = (2, 1)
@@ -43,6 +44,7 @@ class Options:
         self.points_s = 1
         self.points_m = 2
         self.points_h = 3
+        self.god_mode = {}
 
 
 def menu_options(options):
@@ -241,7 +243,11 @@ def gameround(options, player, players, iterator_prefix):
     elif cheat == "m":
         round_data[4] = options.value_m
     elif cheat == "g":
-        god_mode = True
+        options.god_mode.update({player[0]: not options.god_mode[player[0]]})
+        if options.god_mode[player[0]]:
+            print("God Mode aktiviert.")
+        else:
+            print("God Mode deaktiviert.")
         round_data[4] = throw_dice(options.dice_order)
     else:
         round_data[4] = throw_dice(options.dice_order)
@@ -312,6 +318,7 @@ def game(options):
             if options.shuffle_player:
                 rnd.shuffle(players)
             print("Die Spielreihenfolge ist", [p[0] for p in players])
+            options.god_mode = dict.fromkeys({[p[0] for p in players]: False})
             iterator = 0
             iterator_prefix = 1
             while True:
