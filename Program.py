@@ -7,7 +7,6 @@ __author__ = "Tobias, 7232927, Schott, 7040759"
 __credits__ = ""
 __email__ = "s0798915@rz.uni-frankfurt.de, s7296105@stud.uni-frankfurt.de"
 
-# TODO god mode beim punktabzug beachten
 # TODO Table at gameend
 
 standart_values = [(2, 1), (3, 1), (3, 2), (4, 1), (4, 2), (4, 3), (5, 1),
@@ -184,12 +183,13 @@ def compare(options, own_dice, other_dice):
     if own_dice == options.value_h or own_dice == options.value_m:
         return True
     if options.dice_order:
-        return standart_values.index(own_dice) > standart_values.index(other_dice)
+        return standart_values.index(own_dice) > standart_values.index(
+            other_dice)
     else:
         return ordered_values.index(own_dice) > ordered_values.index(other_dice)
 
 
-def gameround(options, player, players, iterator_prefix):
+def gameround(options, player, players):
     round_data = [player[0], False, "", 0, (0, 0), (0, 0)]
     print(player[0], "ist an der Reihe.")
     input("Bestätigen, um die Runde zu beginnen")
@@ -207,21 +207,26 @@ def gameround(options, player, players, iterator_prefix):
                 print("Tatsächlich hat", previous_round_data[0],
                       "folgendes geworfen:")
                 visualize(previous_round_data[4])
+                # Points to deduct.
                 if previous_round_data[4] == options.value_m:
                     round_data[3] = options.points_m
-                    iterator_prefix *= -1
                 elif previous_round_data[4] == options.value_h:
                     round_data[3] = options.points_h
-                    iterator_prefix *= -1
                 else:
                     round_data[3] = options.points_s
+                # Previous player said the truth.
                 if previous_round_data[4] == previous_round_data[5]:
+                    if options.god_mode[round_data[0]]:
+                        round_data[3] = 0
                     print(previous_round_data[0], "hat die Wahrheit gesagt!")
                     round_data[2] = round_data[0]
                     [p for p in players if p[0] == round_data[0]][0][2] -= \
                         round_data[3]
                     print(player[0], "hat", round_data[3], "Punkte verloren")
+                # Previous player lied.
                 else:
+                    if options.god_mode[previous_round_data[0]]:
+                        round_data[3] = 0
                     print(previous_round_data[0], "hat gelogen!")
                     round_data[2] = previous_round_data[0]
                     [p for p in players if p[0] == round_data[0]][0][2] -= \
@@ -270,9 +275,11 @@ def gameround(options, player, players, iterator_prefix):
             print("Eingabe ungültig.")
     if len(history) != 0:
         previous_round_data = history[len(history) - 1]
-        if round_data[3] != 3 and not previous_round_data[1]:
+        if round_data[2] == "" and not previous_round_data[1]:
             if not compare(options, round_data[5], previous_round_data[5]):
-                if previous_round_data[5] == options.value_m:
+                if options.god_mode[player[0]]:
+                    round_data[3] = 0
+                elif previous_round_data[5] == options.value_m:
                     round_data[3] = options.points_m
                 elif previous_round_data[5] == options.value_h:
                     round_data[3] = options.points_h
@@ -318,7 +325,7 @@ def game(options):
             if options.shuffle_player:
                 rnd.shuffle(players)
             print("Die Spielreihenfolge ist", [p[0] for p in players])
-            options.god_mode = dict.fromkeys({[p[0] for p in players]: False})
+            options.god_mode = dict.fromkeys([p[0] for p in players], False)
             iterator = 0
             iterator_prefix = 1
             while True:
@@ -329,7 +336,10 @@ def game(options):
                 if player[1]:
                     pass  # Is computer.
                 else:
-                    gameround(options, player, players, iterator_prefix)
+                    gameround(options, player, players)
+                if history[len(history) - 1][3] == options.points_h or \
+                        history[len(history) - 1][3] == options.points_m:
+                    iterator_prefix *= -1
                 iterator += iterator_prefix
             print([p for p in players if p[2] > 1][0][0],
                   "hat gewonnen!")
