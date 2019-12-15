@@ -2,23 +2,11 @@
 
 import random as rnd
 from os import system
+from time import sleep
 
 __author__ = "Tobias, 7232927, Schott, 7040759"
 __credits__ = ""
 __email__ = "s0798915@rz.uni-frankfurt.de, s7296105@stud.uni-frankfurt.de"
-
-# TODO Table at gameend
-
-standart_values = [(2, 1), (3, 1), (3, 2), (4, 1), (4, 2), (4, 3), (5, 1),
-                   (5, 2), (5, 3), (5, 4), (6, 1), (6, 2), (6, 3), (6, 4),
-                   (6, 5), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6)]
-ordered_values = [(1, 2), (1, 3), (1, 4), (1, 5), (1, 6),
-                  (2, 1), (2, 3), (2, 4), (2, 5), (2, 6),
-                  (3, 1), (3, 2), (3, 4), (3, 5), (3, 6),
-                  (4, 1), (4, 2), (4, 3), (4, 5), (4, 6),
-                  (5, 1), (5, 2), (5, 3), (5, 4), (5, 6),
-                  (6, 1), (6, 2), (6, 3), (6, 4), (6, 5),
-                  (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6)]
 
 history = []
 
@@ -53,11 +41,12 @@ def menu_options(options):
             x, um ins Hauptmenü zurückzukehren.
             m, um den Wert von Mäxchen zu verändern.
             h, um den Wert von Hamburger zu verändern.
-            sp, um den standart Punktabzug zu ändern.
+            sp, um den Standartpunktabzug zu ändern.
             mp, um den Punktabzug für Mäxchen zu verändern.
             hp, um den Punktabzug für Hamburger zu verändern.
             p, um die Punkte zu Spielbegin zu ändern.
-            s, um das Mischen der Spielerreihenfolge zu begin zu (de)aktivieren.
+            s, um das Mischen der Spielerreihenfolge zu Beginn zu \
+            (de)aktivieren.
             o, um die Sortierung der Würfel zu (de)aktivieren.
             r, um alle Optionen zu resetten.""").lower()
         if options_choice == "x":
@@ -151,7 +140,8 @@ def visualize(dice):
     left = chr(0x2503) + chr(32) + chr(0x20DD) + chr(32) * 7 + chr(0x2503)
     left_right = chr(0x2503) + chr(32) + chr(0x20DD) + chr(32) * 5 + chr(
         0x20DD) + chr(32) + chr(0x2503)
-    middle = chr(0x2503) + chr(32) * 4 + chr(0x20DD) + chr(32) * 4 + chr(0x2503)
+    middle = chr(0x2503) + chr(32) * 4 + chr(0x20DD) + chr(32) * 4 + chr(
+        0x2503)
     right = chr(0x2503) + chr(32) * 7 + chr(0x20DD) + chr(32) + chr(0x2503)
     line1 = chr(0x250F) + chr(0x2501) * 9 + chr(0x2513) + chr(32) + chr(
         0x250F) + chr(0x2501) * 9 + chr(0x2513)
@@ -175,7 +165,7 @@ def throw_dice(sort):
         return dice1, dice2
 
 
-def compare(options, own_dice, other_dice):
+def compare(options, own_dice, other_dice, standart_values, ordered_values):
     if other_dice == options.value_h:
         return False
     if other_dice == options.value_m:
@@ -186,10 +176,29 @@ def compare(options, own_dice, other_dice):
         return standart_values.index(own_dice) > standart_values.index(
             other_dice)
     else:
-        return ordered_values.index(own_dice) > ordered_values.index(other_dice)
+        return ordered_values.index(own_dice) > ordered_values.index(
+            other_dice)
 
 
-def gameround(options, player, players):
+def create_table(options, players):
+    # system("cls")
+    point_history = dict.fromkeys([p[0] for p in players], options.max_points)
+    print("{:6}".format("Round"), end="")
+    for name in point_history.keys():
+        print("|", "{:>10}".format(name + " "), end="")
+    print()
+    iterator = 1
+    for item in history:
+        if item[2] in point_history.keys():
+            point_history.update({item[2]: point_history[item[2]] - item[3]})
+        print("{:6}".format(iterator), end="")
+        for value in point_history.values():
+            print("|", "{:>10}".format(str(value) + " "), end="")
+        print()
+        iterator += 1
+
+
+def gameround(options, player, players, standart_values, ordered_values):
     round_data = [player[0], False, "", 0, (0, 0), (0, 0)]
     print(player[0], "ist an der Reihe.")
     input("Bestätigen, um die Runde zu beginnen")
@@ -237,7 +246,6 @@ def gameround(options, player, players):
                 break
             else:
                 print("Eingabe ungültig.")
-
     cheat = input("""Möchten Sie einen Cheat aktivieren?
     h für Hamburger,
     m für Mäxchen,
@@ -276,7 +284,8 @@ def gameround(options, player, players):
     if len(history) != 0:
         previous_round_data = history[len(history) - 1]
         if round_data[2] == "" and not previous_round_data[1]:
-            if not compare(options, round_data[5], previous_round_data[5]):
+            if not compare(options, round_data[5], previous_round_data[5],
+                           standart_values, ordered_values):
                 if options.god_mode[player[0]]:
                     round_data[3] = 0
                 elif previous_round_data[5] == options.value_m:
@@ -297,7 +306,121 @@ def gameround(options, player, players):
     system("cls")
 
 
+def computer_gameround(options, player, players, standart_values,
+                       ordered_values):
+    round_data = [player[0], False, "", 0, (0, 0), (0, 0)]
+    print(player[0], "ist an der Reihe.")
+    sleep(1)
+    system("cls")
+    if len(history) != 0 and not history[-1][1]:
+        previous_round_data = history[-1]
+        if previous_round_data[5] == options.value_h:
+            chance_not_to_believe = 1
+        else:
+            chance_not_to_believe = 0.4
+            if previous_round_data[5] == options.value_m:
+                chance_not_to_believe += 0.275
+            if len(history) >= 2 and not history[-2][1]:
+                if options.dice_order:
+                    if standart_values.index(
+                            history[-1][5]) == \
+                            standart_values.index(history[-2][5]) + 1:
+                        chance_not_to_believe += 0.275
+                else:
+                    if ordered_values.index(
+                            history[-1][5]) == \
+                            ordered_values.index(history[-2][5]) + 1:
+                        chance_not_to_believe += 0.275
+            if player[2] <= 3:
+                chance_not_to_believe -= 0.275
+        # Computer does not believe the previous player.
+        if rnd.random < chance_not_to_believe:
+            if previous_round_data[4] == options.value_m:
+                round_data[3] = options.points_m
+            elif previous_round_data[4] == options.value_h:
+                round_data[3] = options.points_h
+            else:
+                round_data[3] = options.points_s
+            # Previous player said the truth.
+            if previous_round_data[4] == previous_round_data[5]:
+                round_data[2] = round_data[0]
+                [p for p in players if p[0] == round_data[0]][0][2] -= \
+                    round_data[3]
+            # Previous player lied.
+            else:
+                if options.god_mode[previous_round_data[0]]:
+                    round_data[3] = 0
+                round_data[2] = previous_round_data[0]
+                [p for p in players if p[0] == round_data[0]][0][2] -= \
+                    previous_round_data[3]
+
+    round_data[4] = throw_dice(options.dice_order)
+    # 10% chance to lie generally.
+    lie = rnd.random < 0.1
+    # 100% chance to lie if rolled dice are smaller than needed.
+    if len(history) != 0 and not compare(options, round_data[5],
+                                         history[-1][5],
+                                         standart_values, ordered_values):
+        # TODO check previous round reset.
+        lie = True
+    if lie:
+        if len(history) != 0 and round_data[2] == "":
+            if history[-1][5] == options.value_h:
+                pass  #random
+            elif history[-1][5] == options.value_m:
+                round_data[5] = options.value_h
+            else:
+                if options.dice_order:
+                    pass
+                else:
+    while True:
+        lie = input("Möchten Sie lügen? (j/n)")
+        if lie == "j":
+            new_dice = input(
+                "Auf welchen Wert sollen die Würfel geändert werden? " +
+                "(2 Zahlen mit Komma getrennt eingeben)")
+            round_data[5] = (
+                int(new_dice.split(sep=',')[0]),
+                int(new_dice.split(sep=',')[1]))
+            break
+        elif lie == "n":
+            round_data[5] = round_data[4]
+            break
+        else:
+            print("Eingabe ungültig.")
+    if len(history) != 0:
+        previous_round_data = history[-1]
+        if round_data[2] == "" and not previous_round_data[1]:
+            if not compare(options, round_data[5], previous_round_data[5],
+                           standart_values, ordered_values):
+                if options.god_mode[player[0]]:
+                    round_data[3] = 0
+                elif previous_round_data[5] == options.value_m:
+                    round_data[3] = options.points_m
+                elif previous_round_data[5] == options.value_h:
+                    round_data[3] = options.points_h
+                else:
+                    round_data[3] = options.points_s
+
+                round_data[2] = round_data[0]
+                [p for p in players if p[0] == round_data[0]][0][2] -= \
+                    round_data[3]
+                round_data[1] = True
+    history.append(round_data)
+    system("cls")
+
+
 def game(options):
+    standart_values = [(2, 1), (3, 1), (3, 2), (4, 1), (4, 2), (4, 3), (5, 1),
+                       (5, 2), (5, 3), (5, 4), (6, 1), (6, 2), (6, 3), (6, 4),
+                       (6, 5), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6)]
+    ordered_values = [(1, 2), (1, 3), (1, 4), (1, 5), (1, 6),
+                      (2, 1), (2, 3), (2, 4), (2, 5), (2, 6),
+                      (3, 1), (3, 2), (3, 4), (3, 5), (3, 6),
+                      (4, 1), (4, 2), (4, 3), (4, 5), (4, 6),
+                      (5, 1), (5, 2), (5, 3), (5, 4), (5, 6),
+                      (6, 1), (6, 2), (6, 3), (6, 4), (6, 5),
+                      (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6)]
     players = []
     computer = False
     system("cls")
@@ -329,20 +452,22 @@ def game(options):
             iterator = 0
             iterator_prefix = 1
             while True:
-                active_players = [p for p in players if p[2] > 1]
+                active_players = [p for p in players if p[2] >= 1]
                 if len(active_players) <= 1:
                     break
                 player = active_players[iterator % len(active_players)]
                 if player[1]:
                     pass  # Is computer.
                 else:
-                    gameround(options, player, players)
+                    gameround(options, player, players, standart_values,
+                              ordered_values)
                 if history[len(history) - 1][3] == options.points_h or \
                         history[len(history) - 1][3] == options.points_m:
                     iterator_prefix *= -1
                 iterator += iterator_prefix
-            print([p for p in players if p[2] > 1][0][0],
+            print([p for p in players if p[2] >= 1][0][0],
                   "hat gewonnen!")
+            create_table(options, players)
             return
         elif user_choice == "x":
             return
