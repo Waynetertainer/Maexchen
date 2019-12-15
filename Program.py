@@ -358,21 +358,22 @@ def computer_gameround(options, player, players, standart_values,
     # 10% chance to lie generally.
     lie = rnd.random < 0.1
     # 100% chance to lie if rolled dice are smaller than needed.
-    if len(history) != 0 and not compare(options, round_data[5],
-                                         history[-1][5],
-                                         standart_values, ordered_values):
+    if len(history) != 0 and not history[-1][1] and \
+            not compare(options, round_data[5], history[-1][5],
+                        standart_values, ordered_values):
         # TODO check previous round reset.
         lie = True
     if lie:
         if len(history) != 0 and round_data[2] == "":
             if history[-1][5] == options.value_h:
-                pass  #random
+                pass  # todo random
             elif history[-1][5] == options.value_m:
                 round_data[5] = options.value_h
             else:
                 if options.dice_order:
-                    pass
+                    pass  # todo
                 else:
+                    pass  # todo
     while True:
         lie = input("Möchten Sie lügen? (j/n)")
         if lie == "j":
