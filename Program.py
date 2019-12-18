@@ -1,4 +1,6 @@
-""" Creates random identities with name and address. """
+""" A game of "Mäxchen".
+
+ Shoud be started via the program "Startup". """
 
 import random as rnd
 from os import system
@@ -12,6 +14,8 @@ history = []
 
 
 class Options:
+    """ An object for storing the options during the game. """
+
     value_m = (2, 1)
     value_h = (4, 2)
     shuffle_player = True
@@ -23,6 +27,8 @@ class Options:
     god_mode = {}
 
     def reset(self):
+        """ Resets all values to default. """
+
         self.value_m = (2, 1)
         self.value_h = (4, 2)
         self.shuffle_player = True
@@ -35,6 +41,8 @@ class Options:
 
 
 def menu_options(options):
+    """ Manages the options menu. """
+
     while True:
         options_choice = input(
             """Was möchten Sie tun?
@@ -49,12 +57,15 @@ def menu_options(options):
             (de)aktivieren.
             o, um die Sortierung der Würfel zu (de)aktivieren.
             r, um alle Optionen zu resetten.""").lower()
+        # Returns from options.
         if options_choice == "x":
             return
+        # Resets all options.
         elif options_choice == "r":
             system("cls")
             options.reset()
             print("Alle Optionen wurden zurückgesetzt.")
+        # Changes the value of Mäxchen.
         elif options_choice == "m":
             system("cls")
             value = input(
@@ -64,6 +75,7 @@ def menu_options(options):
                 int(value.split(sep=',')[0]), int(value.split(sep=',')[1]))
             system("cls")
             print("Mäxchen hat nun den Wert", options.value_m)
+        # Changes the value of Hamburger.
         elif options_choice == "h":
             system("cls")
             value = input(
@@ -73,6 +85,7 @@ def menu_options(options):
                 int(value.split(sep=',')[0]), int(value.split(sep=',')[1]))
             system("cls")
             print("Hamburger hat nun den Wert", options.value_h)
+        # Changes points to deduct for standart case.
         elif options_choice == "sp":
             system("cls")
             options.points_s = int(
@@ -80,6 +93,7 @@ def menu_options(options):
             system("cls")
             print("Im Standartfall werden nun", options.points_s,
                   "Punkte abgezogen.")
+        # Changes points to deduct for Mäxchen.
         elif options_choice == "mp":
             system("cls")
             options.points_m = int(
@@ -87,6 +101,7 @@ def menu_options(options):
             system("cls")
             print("für Mäxchen werden nun", options.points_m,
                   "Punkte abgezogen.")
+        # Changes points to deduct for Hamburger.
         elif options_choice == "hp":
             system("cls")
             options.points_h = int(
@@ -94,6 +109,7 @@ def menu_options(options):
             system("cls")
             print("Für Mäxchen werden nun", options.points_h,
                   "Punkte abgezogen.")
+        # Changes to amount of points the players start with.
         elif options_choice == "p":
             system("cls")
             options.max_points = int(
@@ -101,6 +117,7 @@ def menu_options(options):
             system("cls")
             print("Die Spieler starten nun mit", options.max_points,
                   "Punkte.")
+        # Changes whether to mix the order of players at start.
         elif options_choice == "s":
             system("cls")
             user_input = input(
@@ -114,6 +131,7 @@ def menu_options(options):
                 print("Die Spielerreihenfolge wird zu Begin gemischt")
             else:
                 print("Die Spielerreihenfolge wird zu Begin nicht gemischt.")
+        # Changes whether the dice should be ordered or not.
         elif options_choice == "o":
             system("cls")
             user_input = input(
@@ -157,6 +175,10 @@ def visualize(dice):
 
 
 def throw_dice(sort):
+    """ Creates a tupel of two numbers between 1 and 6 representing two dice.
+
+    """
+
     dice1 = rnd.randint(1, 6)
     dice2 = rnd.randint(1, 6)
     if sort:
@@ -166,6 +188,12 @@ def throw_dice(sort):
 
 
 def compare(options, own_dice, other_dice, standart_values, ordered_values):
+    """ Determines the higher roll of two pairs of dice.
+
+    Returns whether the first given pair of dice is higher than the second
+    pair.
+    """
+
     if other_dice == options.value_h:
         return False
     if other_dice == options.value_m:
@@ -181,7 +209,9 @@ def compare(options, own_dice, other_dice, standart_values, ordered_values):
 
 
 def create_table(options, players):
-    # system("cls")
+    """ Creates a history for the points of each player in each round. """
+
+    system("cls")
     point_history = dict.fromkeys([p[0] for p in players], options.max_points)
     print("{:6}".format("Round"), end="")
     for name in point_history.keys():
@@ -199,10 +229,20 @@ def create_table(options, players):
 
 
 def gameround(options, player, players, standart_values, ordered_values):
+    """ Manages the round of one player. """
+
+    # round_data has 6 components with the following meanings:
+    # [0] : Current player name.
+    # [1] : Reset of streak to beat the previous player.
+    # [2] : Name of player who lost points.
+    # [3] : Amount of points lost.
+    # [4] : Actual thrown dice.
+    # [5] : Said thrown dice.
     round_data = [player[0], False, "", 0, (0, 0), (0, 0)]
     print(player[0], "ist an der Reihe.")
     input("Bestätigen, um die Runde zu beginnen")
     system("cls")
+    # Asks the player whether he wants to believe the previous player.
     if len(history) != 0 and not history[len(history) - 1][1]:
         previous_round_data = history[len(history) - 1]
         while True:
@@ -246,6 +286,7 @@ def gameround(options, player, players, standart_values, ordered_values):
                 break
             else:
                 print("Eingabe ungültig.")
+    # Asks whether the player wants to cheat.
     cheat = input("""Möchten Sie einen Cheat aktivieren?
     h für Hamburger,
     m für Mäxchen,
@@ -266,6 +307,7 @@ def gameround(options, player, players, standart_values, ordered_values):
         round_data[4] = throw_dice(options.dice_order)
     print("Sie haben gewürfelt:")
     visualize(round_data[4])
+    # Asks whether the player wants to lie.
     while True:
         lie = input("Möchten Sie lügen? (j/n)")
         if lie == "j":
@@ -281,6 +323,7 @@ def gameround(options, player, players, standart_values, ordered_values):
             break
         else:
             print("Eingabe ungültig.")
+    # Checks whether the player beat the previous player.
     if len(history) != 0:
         previous_round_data = history[len(history) - 1]
         if round_data[2] == "" and not previous_round_data[1]:
@@ -308,10 +351,13 @@ def gameround(options, player, players, standart_values, ordered_values):
 
 def computer_gameround(options, player, players, standart_values,
                        ordered_values):
+    """ Manages the round of the computer player. """
+
     round_data = [player[0], False, "", 0, (0, 0), (0, 0)]
     print(player[0], "ist an der Reihe.")
     sleep(1)
     system("cls")
+    # Determines whether the computer believes the previous player.
     if len(history) != 0 and not history[-1][1]:
         previous_round_data = history[-1]
         if previous_round_data[5] == options.value_h:
@@ -355,6 +401,7 @@ def computer_gameround(options, player, players, standart_values,
                     previous_round_data[3]
 
     round_data[4] = throw_dice(options.dice_order)
+    # Determines whether the computer lies.
     # 10% chance to lie generally.
     lie = rnd.random < 0.1
     # 100% chance to lie if rolled dice are smaller than needed.
@@ -389,6 +436,7 @@ def computer_gameround(options, player, players, standart_values,
             break
         else:
             print("Eingabe ungültig.")
+    # Checks whether the computer beat the previous player.
     if len(history) != 0:
         previous_round_data = history[-1]
         if round_data[2] == "" and not previous_round_data[1]:
@@ -412,6 +460,8 @@ def computer_gameround(options, player, players, standart_values,
 
 
 def game(options):
+    """ Manages a complete game of Mäxchen. """
+
     standart_values = [(2, 1), (3, 1), (3, 2), (4, 1), (4, 2), (4, 3), (5, 1),
                        (5, 2), (5, 3), (5, 4), (6, 1), (6, 2), (6, 3), (6, 4),
                        (6, 5), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6)]
@@ -432,17 +482,20 @@ def game(options):
         s, um das Spiel zu starten. 
         x, um zurückzukehren. """)
         system("cls")
+        # Adds a user.
         if user_choice == "+":
             players.append([
                 input("Bitte Spielernamen eingeben: "), False,
                 options.max_points])
             system("cls")
+        # Adds or removes the computer.
         elif user_choice == "c":
             computer = not computer
             if computer:
                 print("Der Computergegner ist nun aktiviert.")
             else:
                 print("Der Computergegner ist nun deaktiviert.")
+        # Starts the game.
         elif user_choice == "s":
             if computer:
                 players.append(["Computer", True, options.max_points])
@@ -452,13 +505,16 @@ def game(options):
             options.god_mode = dict.fromkeys([p[0] for p in players], False)
             iterator = 0
             iterator_prefix = 1
+            # Defines the core game loop.
             while True:
                 active_players = [p for p in players if p[2] >= 1]
                 if len(active_players) <= 1:
                     break
                 player = active_players[iterator % len(active_players)]
                 if player[1]:
-                    pass  # Is computer.
+                    computer_gameround(options, player, players,
+                                       standart_values,
+                                       ordered_values)
                 else:
                     gameround(options, player, players, standart_values,
                               ordered_values)
@@ -470,6 +526,7 @@ def game(options):
                   "hat gewonnen!")
             create_table(options, players)
             return
+        # Closes the game.
         elif user_choice == "x":
             return
         else:
@@ -477,7 +534,7 @@ def game(options):
 
 
 def main():
-    """Docstring. """
+    """ Manages the main menu of the game. """
 
     options = Options()
     while True:
