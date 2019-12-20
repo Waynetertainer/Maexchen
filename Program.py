@@ -1,9 +1,12 @@
 """ A game of "Mäxchen".
 
- Shoud be started via the program "Startup". """
+ Shoud be started via the program "Startup".
+ Everything in this code associated with the keyword "dbg" is only for testing
+ and not part of the final game."""
 
 import random as rnd
 from os import system
+from pprint import pprint
 
 __author__ = "Tobias, 7232927, Schott, 7040759"
 __credits__ = ""
@@ -15,15 +18,16 @@ history = []
 class Options:
     """ An object for storing the options during the game. """
 
-    value_m = (2, 1)
-    value_h = (4, 2)
-    shuffle_player = True
-    dice_order = True
-    max_points = 10
-    points_s = 1
-    points_m = 2
-    points_h = 3
-    god_mode = {}
+    def __init__(self):
+        self.value_m = (2, 1)
+        self.value_h = (4, 2)
+        self.shuffle_player = True
+        self.dice_order = True
+        self.max_points = 10
+        self.points_s = 1
+        self.points_m = 2
+        self.points_h = 3
+        self.god_mode = {}
 
     def reset(self):
         """ Resets all values to default. """
@@ -85,7 +89,8 @@ def menu_options(options):
             s, um das Mischen der Spielerreihenfolge zu Beginn zu \
 (de)aktivieren.
             o, um die Sortierung der Würfel zu (de)aktivieren.
-            r, um alle Optionen zu resetten.""").lower()
+            r, um alle Optionen zu resetten.
+            dbg, um die Optionswerte auszugeben.""").lower()
         # Returns from options.
         system("cls")
         if options_choice == "x":
@@ -122,8 +127,9 @@ def menu_options(options):
                     "Auf welchen Wert soll Hamburger geändert werden? " +
                     "(2 Zahlen mit Komma getrennt eingeben)")
                 system("cls")
-                if (int(value.split(sep=',')[0]),
-                    int(value.split(sep=',')[1])) in get_dice_list(options):
+                if len(value.split(sep=',')) == 2 and (
+                int(value.split(sep=',')[0]),
+                int(value.split(sep=',')[1])) in get_dice_list(options):
                     options.value_h = (
                         int(value.split(sep=',')[0]),
                         int(value.split(sep=',')[1]))
@@ -166,12 +172,12 @@ def menu_options(options):
                     "Welchen Punktabzug soll es für Hamburger geben?")
                 system("cls")
                 if value.isdigit() and int(value) >= 0:
-                    options.points_h = int()
-                    print("Für Mäxchen werden nun", options.points_h,
+                    options.points_h = int(value)
+                    print("Für Hamburger werden nun", options.points_h,
                           "Punkte abgezogen.")
                     break
                 else:
-                    print("Eingabe ungültig.")
+                    print("Eingabe ungülotig.")
         # Changes to amount of points the players start with.
         elif options_choice == "p":
             system("cls")
@@ -225,6 +231,10 @@ def menu_options(options):
                 print("Es wird immer die höchstmögliche Kombination genommen")
             else:
                 print("Die Reihenfolge der Würfel ist stets festgelegt.")
+        elif options_choice == "dbg":
+            pprint(options.__dict__)
+        else:
+            print("Eingabe ungültig.")
 
 
 def visualize(dice):
@@ -369,7 +379,7 @@ def gameround(options, player, players):
                     print(player[0], "hat", round_data[3],
                           "Punkte verloren und damit nur noch", player[2],
                           "Punkte.")
-
+                print("Zu schlagende Würfel zurückgesetzt.")
                 break
             else:
                 print("Eingabe ungültig.")
@@ -404,12 +414,20 @@ def gameround(options, player, players):
     while True:
         lie = input("Möchten Sie lügen? (j/n)")
         if lie == "j":
-            new_dice = input(
-                "Auf welchen Wert sollen die Würfel geändert werden? " +
-                "(2 Zahlen mit Komma getrennt eingeben)")
-            round_data[5] = (
+            while True:
+                new_dice = input(
+                    "Auf welchen Wert sollen die Würfel geändert werden? " +
+                    "(2 Zahlen mit Komma getrennt eingeben)")
+                system("cls")
+                if len(new_dice.split(sep=',')) == 2 and (
                 int(new_dice.split(sep=',')[0]),
-                int(new_dice.split(sep=',')[1]))
+                int(new_dice.split(sep=',')[1])) in get_dice_list(options):
+                    round_data[5] = (
+                        int(new_dice.split(sep=',')[0]),
+                        int(new_dice.split(sep=',')[1]))
+                    break
+                else:
+                    print("Eingabe ungültig.")
             break
         elif lie == "n":
             round_data[5] = round_data[4]
@@ -491,6 +509,7 @@ def computer_gameround(options, player, players):
                 print("Der Computer hat", round_data[3],
                       "Punkte verloren und damit nur noch", player[2],
                       "Punkte.")
+            print("Zu schlagende Würfel zurückgesetzt.")
         else:
             print("Der Computer glaubt", previous_round_data[0])
 
@@ -498,7 +517,7 @@ def computer_gameround(options, player, players):
     dice_list = get_dice_list(options)
     # Determines whether the computer lies.
     # 10% chance to lie if the dice of the computer are not high.
-    if dice_list.index(round_data[4]) < 0.75 * len(dice_list):
+    if dice_list.index(round_data[4]) < 0.5 * len(dice_list):
         lie = rnd.random() < 0.1
     else:
         lie = False
@@ -532,9 +551,12 @@ def computer_gameround(options, player, players):
                     round_data[3] = options.points_s
 
                 round_data[2] = round_data[0]
-                [p for p in players if p[0] == round_data[0]][0][2] -= \
-                    round_data[3]
+                player[2] -= round_data[3]
                 round_data[1] = True
+                print("Der Computer hat", round_data[3],
+                      "Punkte verloren und damit nur noch", player[2],
+                      "Punkte.")
+                print("Zu schlagende Würfel zurückgesetzt.")
     history.append(round_data)
 
 
@@ -589,10 +611,12 @@ def game(options):
                     if history[len(history) - 1][3] == options.points_h or \
                             history[len(history) - 1][3] == options.points_m:
                         iterator_prefix *= -1
+                        print("Die Reihenfolge der Spieler wurde umgekehrt.")
                     iterator += iterator_prefix
+                create_table(options, players)
                 print([p for p in players if p[2] >= 1][0][0],
                       "hat gewonnen!")
-                create_table(options, players)
+                input("Zum Beenden bestätigen.")
                 return
             else:
                 print("Zu wenige Spieler.")
