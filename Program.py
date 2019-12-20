@@ -316,14 +316,26 @@ def gameround(options, player, players):
         previous_round_data = history[len(history) - 1]
         while True:
             system("cls")
-            print(previous_round_data[0], "behauptet geworfen zu haben:")
+            name = ""
+            if previous_round_data[5] == options.value_m:
+                name = " Mäxchen"
+            elif previous_round_data[5] == options.value_h:
+                name = " Hamburger"
+            print(previous_round_data[0],
+                  "behauptet" + name + " geworfen zu haben:")
             visualize(previous_round_data[5])
             believe = input("Glauben Sie das? (j/n)").lower()
             if believe == "j":
                 break
             elif believe == "n":
+                if previous_round_data[4] == options.value_m:
+                    name = "Mäxchen"
+                elif previous_round_data[4] == options.value_h:
+                    name = "Hamburger"
+                else:
+                    name = "folgendes"
                 print("Tatsächlich hat", previous_round_data[0],
-                      "folgendes geworfen:")
+                      name, "geworfen:")
                 visualize(previous_round_data[4])
                 # Points to deduct.
                 if previous_round_data[4] == options.value_m:
@@ -332,25 +344,32 @@ def gameround(options, player, players):
                     round_data[3] = options.points_h
                 else:
                     round_data[3] = options.points_s
-                # Previous player said the truth.
-                if previous_round_data[4] == previous_round_data[5]:
-                    if options.god_mode[round_data[0]]:
-                        round_data[3] = 0
-                    print(previous_round_data[0], "hat die Wahrheit gesagt!")
-                    round_data[2] = round_data[0]
-                    [p for p in players if p[0] == round_data[0]][0][2] -= \
-                        round_data[3]
-                    print(player[0], "hat", round_data[3], "Punkte verloren")
                 # Previous player lied.
-                else:
+                if compare(options, previous_round_data[5],
+                           previous_round_data[4]):
                     if options.god_mode[previous_round_data[0]]:
                         round_data[3] = 0
                     print(previous_round_data[0], "hat gelogen!")
                     round_data[2] = previous_round_data[0]
-                    [p for p in players if p[0] == previous_round_data[0]][0][
-                        2] -= round_data[3]
+                    previous_player = \
+                        [p for p in players if p[0] == previous_round_data[0]][
+                            0]
+                    previous_player[2] -= round_data[3]
                     print(previous_round_data[0], "hat", round_data[3],
-                          "Punkte verloren")
+                          "Punkte verloren und damit nur noch",
+                          previous_player[2],
+                          "Punkte.")
+                # Previous player said the truth or said a smaller number.
+                else:
+                    if options.god_mode[round_data[0]]:
+                        round_data[3] = 0
+                    print(previous_round_data[0], "hat die Wahrheit gesagt!")
+                    round_data[2] = round_data[0]
+                    player[2] -= round_data[3]
+                    print(player[0], "hat", round_data[3],
+                          "Punkte verloren und damit nur noch", player[2],
+                          "Punkte.")
+
                 break
             else:
                 print("Eingabe ungültig.")
@@ -373,7 +392,13 @@ def gameround(options, player, players):
         round_data[4] = throw_dice(options.dice_order)
     else:
         round_data[4] = throw_dice(options.dice_order)
-    print("Sie haben gewürfelt:")
+    if round_data[4] == options.value_m:
+        name = " Mäxchen"
+    elif round_data[4] == options.value_h:
+        name = " Hamburger"
+    else:
+        name = ""
+    print("Sie haben" + name + " gewürfelt:")
     visualize(round_data[4])
     # Asks whether the player wants to lie.
     while True:
@@ -406,9 +431,10 @@ def gameround(options, player, players):
                     round_data[3] = options.points_s
 
                 round_data[2] = round_data[0]
-                [p for p in players if p[0] == round_data[0]][0][2] -= \
-                    round_data[3]
-                print(player[0], "hat", round_data[3], "Punkte verloren")
+                player[2] -= round_data[3]
+                print(player[0], "hat", round_data[3],
+                      "Punkte verloren und damit nur noch", player[2],
+                      "Punkte.")
                 print("Zu schlagende Würfel zurückgesetzt.")
                 round_data[1] = True
     history.append(round_data)
@@ -446,22 +472,25 @@ def computer_gameround(options, player, players):
                 round_data[3] = options.points_h
             else:
                 round_data[3] = options.points_s
-            # Previous player said the truth.
-            if previous_round_data[4] == previous_round_data[5]:
-                round_data[2] = round_data[0]
-                [p for p in players if p[0] == round_data[0]][0][2] -= \
-                    round_data[3]
-                print("Der Computer hat", round_data[3],
-                      "Punkte verloren")
             # Previous player lied.
-            else:
+            if compare(options, previous_round_data[5],
+                       previous_round_data[4]):
                 if options.god_mode[previous_round_data[0]]:
                     round_data[3] = 0
                 round_data[2] = previous_round_data[0]
-                [p for p in players if p[0] == previous_round_data[0]][0][2] \
-                    -= round_data[3]
+                previous_player = \
+                    [p for p in players if p[0] == previous_round_data[0]][0]
+                previous_player[2] -= round_data[3]
                 print(previous_round_data[0], "hat", round_data[3],
-                      "Punkte verloren")
+                      "Punkte verloren und damit nur noch", previous_player[2],
+                      "Punkte.")
+            # Previous player said the truth or said a smaller number.
+            else:
+                round_data[2] = round_data[0]
+                player[2] -= round_data[3]
+                print("Der Computer hat", round_data[3],
+                      "Punkte verloren und damit nur noch", player[2],
+                      "Punkte.")
         else:
             print("Der Computer glaubt", previous_round_data[0])
 
